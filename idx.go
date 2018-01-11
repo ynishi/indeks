@@ -2,6 +2,12 @@ package indeks
 
 import "time"
 
+const (
+	ResultUncheck = iota
+	ResultOK
+	ResultNG
+)
+
 type Idx struct {
 	Name            string
 	Desc            string
@@ -28,5 +34,19 @@ func CreateAction(idx *Idx, now time.Time) (action *Action) {
 		Result:     0,
 	}
 	idx.Actions = append(idx.Actions, action)
+	return action
+}
+
+func Do(action *Action, t *time.Time) *Action {
+	if t == nil {
+		action.ActualTime = time.Now()
+	} else {
+		action.ActualTime = *t
+	}
+	if action.ActualTime.Before(action.TargetTime) {
+		action.Result = ResultOK
+	} else {
+		action.Result = ResultNG
+	}
 	return action
 }
