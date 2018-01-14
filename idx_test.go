@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
-)
+	)
 
 var (
 	testIdx    *Idx
@@ -58,4 +58,23 @@ func TestCheckAction(t *testing.T) {
 	if !reflect.DeepEqual(action2.ActualTime, d) {
 		t.Fatalf("ActualTime is not Matched\nhave: %v\nwant: %v", action2.ActualTime, d)
 	}
+}
+
+func TestChangeTargetDateAction(t *testing.T) {
+	action := &Action{Idx: testIdx}
+	action.TargetTime = time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC)
+
+	d := time.Date(2018, 1, 12, 0, 0, 0, 0, time.UTC)
+	changed := ChangeTargetTime(action, &d, "reschedule")
+
+	if reflect.DeepEqual(d, changed.TargetTime) {
+		t.Fatalf("Failed Changed TargetTime\nhave: %v\nwant: %v", d, changed.TargetTime)
+	}
+	if changed.Result != ResultUncheck {
+		t.Fatalf("changed ResultStatus is not Uncheck: %v", changed.Result)
+	}
+	if action.Result != ResultChanged {
+		t.Fatalf("original ResultStatus is not ResultChanged: %v", action.Result)
+	}
+
 }
