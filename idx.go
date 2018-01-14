@@ -6,6 +6,7 @@ const (
 	ResultUncheck = iota
 	ResultOK
 	ResultNG
+	ResultChanged
 )
 
 type Idx struct {
@@ -22,6 +23,7 @@ type Action struct {
 	ActualTime time.Time
 	Point      int
 	Result     int
+	Comment string
 }
 
 func CreateAction(idx *Idx, now time.Time) (action *Action) {
@@ -49,4 +51,12 @@ func Do(action *Action, t *time.Time) *Action {
 		action.Result = ResultNG
 	}
 	return action
+}
+
+func ChangeTargetTime(action *Action, t *time.Time, comment string) (changed *Action) {
+	changed = CreateAction(action.Idx, *t)
+	action.Result = ResultChanged
+	action.ActualTime = time.Now()
+	action.Comment = comment
+	return changed
 }
