@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	)
+)
 
 var (
 	testIdx    *Idx
@@ -60,7 +60,7 @@ func TestCheckAction(t *testing.T) {
 	}
 }
 
-func TestChangeTargetDateAction(t *testing.T) {
+func TestChangeTargetTimeAction(t *testing.T) {
 	action := &Action{Idx: testIdx}
 	action.TargetTime = time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC)
 
@@ -77,4 +77,64 @@ func TestChangeTargetDateAction(t *testing.T) {
 		t.Fatalf("original ResultStatus is not ResultChanged: %v", action.Result)
 	}
 
+}
+
+func TestRemoveAction(t *testing.T) {
+	raIdx := &Idx{Name: "idxra", Desc: "idxra", DefaultPoint: 1, Actions: nil}
+	action := CreateAction(raIdx, time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC))
+	action2 := CreateAction(raIdx, time.Date(2018, 1, 14, 0, 0, 0, 0, time.UTC))
+
+	raIdx = RemoveAction(raIdx, action)
+	if len(raIdx.Actions) != 1 {
+		t.Fatalf("Removed raIdx not 1: %v", len(raIdx.Actions))
+	}
+	if !reflect.DeepEqual(action2, raIdx.Actions[0]) {
+		t.Fatalf("Failed match remained action\nhave: %v\nwant: %v", raIdx.Actions[0], action2)
+	}
+}
+
+func TestSumActualPointIdx(t *testing.T) {
+	spIdx := &Idx{Name: "spidx", Desc: "spidx", DefaultPoint: 1, Actions: nil}
+	action1 := CreateAction(spIdx, time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC))
+	action1.Point = 2
+	action2 := CreateAction(spIdx, time.Date(2018, 1, 14, 0, 0, 0, 0, time.UTC))
+	CreateAction(spIdx, time.Date(2018, 1, 15, 0, 0, 0, 0, time.UTC))
+
+	t1 := time.Date(2018, 1, 12, 0, 0, 0, 0, time.UTC)
+	t2 := time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC)
+	Do(action1, &t1)
+	Do(action2, &t2)
+
+	start := time.Date(2018, 1, 10, 0, 0, 0, 0, time.UTC)
+
+	expected := 3
+	actual := SumActualPoint(spIdx, start, nil)
+	if expected != actual {
+		t.Fatal("Sum result not match\nhave %v\nwant %v", actual, expected)
+	}
+}
+
+func TestSumTargetPointIdx(t *testing.T) {
+	spIdx := &Idx{Name: "spidx", Desc: "spidx", DefaultPoint: 1, Actions: nil}
+	action1 := CreateAction(spIdx, time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC))
+	action1.Point = 2
+	action2 := CreateAction(spIdx, time.Date(2018, 1, 14, 0, 0, 0, 0, time.UTC))
+	action3 := CreateAction(spIdx, time.Date(2018, 1, 15, 0, 0, 0, 0, time.UTC))
+
+	t1 := time.Date(2018, 1, 12, 0, 0, 0, 0, time.UTC)
+	t2 := time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC)
+	t3 := time.Date(2018, 1, 16, 0, 0, 0, 0, time.UTC)
+
+	Do(action1, &t1)
+	Do(action2, &t2)
+	ChangeTargetTime(action3, &t3, "test")
+
+	start := time.Date(2018, 1, 13, 1, 0, 0, 0, time.UTC)
+	end := time.Date(2018, 1, 17, 0, 0, 0, 0, time.UTC)
+
+	expected := 2
+	actual := SumTargetPoint(spIdx, start, &end)
+	if expected != actual {
+		t.Fatalf("Sum result not match\nhave %v\nwant %v", actual, expected)
+	}
 }

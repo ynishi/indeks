@@ -23,7 +23,7 @@ type Action struct {
 	ActualTime time.Time
 	Point      int
 	Result     int
-	Comment string
+	Comment    string
 }
 
 func CreateAction(idx *Idx, now time.Time) (action *Action) {
@@ -59,4 +59,47 @@ func ChangeTargetTime(action *Action, t *time.Time, comment string) (changed *Ac
 	action.ActualTime = time.Now()
 	action.Comment = comment
 	return changed
+}
+
+func RemoveAction(idx *Idx, action *Action) (removed *Idx) {
+	result := []*Action{}
+	for _, act := range idx.Actions {
+		if act != action {
+			result = append(result, act)
+		}
+	}
+	idx.Actions = result
+	return idx
+}
+
+func SumActualPoint(idx *Idx, start time.Time, end *time.Time) (result int) {
+	var endt *time.Time
+	if end == nil {
+		now := time.Now()
+		endt = &now
+	} else {
+		endt = end
+	}
+	for _, act := range idx.Actions {
+		if act.Result == ResultOK && act.ActualTime.After(start) && act.ActualTime.Before(*endt) {
+			result += act.Point
+		}
+	}
+	return result
+}
+
+func SumTargetPoint(idx *Idx, start time.Time, end *time.Time) (result int) {
+	var endt *time.Time
+	if end == nil {
+		now := time.Now()
+		endt = &now
+	} else {
+		endt = end
+	}
+	for _, act := range idx.Actions {
+		if act.Result != ResultChanged && act.TargetTime.After(start) && act.TargetTime.Before(*endt) {
+			result += act.Point
+		}
+	}
+	return result
 }
