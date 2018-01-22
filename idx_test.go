@@ -1,9 +1,12 @@
 package indeks
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
+
+	firebase "firebase.google.com/go"
 )
 
 var (
@@ -137,4 +140,47 @@ func TestSumTargetPointIdx(t *testing.T) {
 	if expected != actual {
 		t.Fatalf("Sum result not match\nhave %v\nwant %v", actual, expected)
 	}
+}
+
+func TestSummaryPointIdx(t *testing.T) {
+	spIdx := &Idx{Name: "spidx", Desc: "spidx", DefaultPoint: 1, Actions: nil}
+	action1 := CreateAction(spIdx, time.Date(2018, 1, 13, 0, 0, 0, 0, time.UTC))
+	action1.Point = 2
+	action2 := CreateAction(spIdx, time.Date(2018, 1, 15, 0, 0, 0, 0, time.UTC))
+	action2.Point = 3
+	action3 := CreateAction(spIdx, time.Date(2018, 1, 16, 0, 0, 0, 0, time.UTC))
+
+	t1 := time.Date(2018, 1, 12, 0, 0, 0, 0, time.UTC)
+	t2 := time.Date(2018, 1, 14, 0, 0, 0, 0, time.UTC)
+	t3 := time.Date(2018, 1, 17, 0, 0, 0, 0, time.UTC)
+
+	Do(action1, &t1)
+	Do(action2, &t2)
+	ChangeTargetTime(action3, &t3, "test")
+
+	start := time.Date(2018, 1, 13, 1, 0, 0, 0, time.UTC)
+	end := time.Date(2018, 1, 18, 0, 0, 0, 0, time.UTC)
+
+	expected := Summary{Target: 4, Actual: 3, Ratio: 0.75, TargetC: 2, ActualC: 1, RatioC: 0.5}
+	actual := SummaryPoint(spIdx, start, &end)
+	if reflect.DeepEqual(expected, actual) {
+		t.Fatalf("Sum result not match\nhave %v\nwant %v", actual, expected)
+	}
+}
+
+func TestInitFirebase(t *testing.T) {
+	// FireStore
+	projectID := ""
+	conf := &firebase.Config{ProjectID: projectID}
+	ctx := context.Background()
+	app, err := firebase.NewApp(ctx, conf)
+	if err != nil {
+		t.Fatalf("Firebase app init failed: %v", err)
+	}
+
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		t.Fatalf("Firestore client init failed: %v", err)
+	}
+	defer client.Close()
 }

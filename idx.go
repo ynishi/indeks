@@ -1,6 +1,8 @@
 package indeks
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ResultUncheck = iota
@@ -24,6 +26,15 @@ type Action struct {
 	Point      int
 	Result     int
 	Comment    string
+}
+
+type Summary struct {
+	Target  int
+	Actual  int
+	Ratio   float32
+	TargetC int
+	ActualC int
+	RatioC  float32
 }
 
 func CreateAction(idx *Idx, now time.Time) (action *Action) {
@@ -72,16 +83,20 @@ func RemoveAction(idx *Idx, action *Action) (removed *Idx) {
 	return idx
 }
 
+func CheckOK(act *Action, start *time.Time, end *time.Time) (ok bool) {
+	ok = act.Result == ResultOK && act.ActualTime.After(*start) && act.ActualTime.Before(*end)
+	return ok
+}
+
+func CheckTarget(act *Action, start *time.Time, end *time.Time) (isT bool) {
+	isT = act.Result != ResultChanged && act.TargetTime.After(*start) && act.TargetTime.Before(*end)
+	return isT
+}
+
 func SumActualPoint(idx *Idx, start time.Time, end *time.Time) (result int) {
-	var endt *time.Time
-	if end == nil {
-		now := time.Now()
-		endt = &now
-	} else {
-		endt = end
-	}
+	endt := fillEndtime(end)
 	for _, act := range idx.Actions {
-		if act.Result == ResultOK && act.ActualTime.After(start) && act.ActualTime.Before(*endt) {
+		if CheckOK(act, &start, endt) {
 			result += act.Point
 		}
 	}
@@ -89,17 +104,51 @@ func SumActualPoint(idx *Idx, start time.Time, end *time.Time) (result int) {
 }
 
 func SumTargetPoint(idx *Idx, start time.Time, end *time.Time) (result int) {
-	var endt *time.Time
-	if end == nil {
-		now := time.Now()
-		endt = &now
-	} else {
-		endt = end
-	}
+	endt := fillEndtime(end)
 	for _, act := range idx.Actions {
-		if act.Result != ResultChanged && act.TargetTime.After(start) && act.TargetTime.Before(*endt) {
+		if CheckTarget(act, &start, endt) {
 			result += act.Point
 		}
 	}
 	return result
+}
+
+func SummaryPoint(idx *Idx, start time.Time, end *time.Time) (summary *Summary) {
+	endt := fillEndtime(end)
+
+	stp := SumTargetPoint(idx, start, endt)
+	sap := SumActualPoint(idx, start, endt)
+
+	stc := 0
+	for _, act := range idx.Actions {
+		if CheckTarget(act, &start, endt) {
+			stc++
+		}
+	}
+
+	sac := 0
+	for _, act := range idx.Actions {
+		if CheckOK(act, &start, endt) {
+			sac++
+		}
+	}
+
+	summary = &Summary{
+		Target:  stp,
+		Actual:  sap,
+		Ratio:   float32(sap) / float32(stp),
+		TargetC: stc,
+		ActualC: sac,
+		RatioC:  float32(sac) / float32(stc),
+	}
+	return summary
+}
+
+func fillEndtime(end *time.Time) *time.Time {
+	if end == nil {
+		now := time.Now()
+		return &now
+	} else {
+		return end
+	}
 }
