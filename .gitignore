@@ -14,3 +14,5 @@
 .glide/
 
 .idea/
+
+firebase-admin-sdk.json

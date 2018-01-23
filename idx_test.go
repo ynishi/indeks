@@ -7,6 +7,9 @@ import (
 	"time"
 
 	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
+	"google.golang.org/api/iterator"
+	"fmt"
 )
 
 var (
@@ -170,12 +173,12 @@ func TestSummaryPointIdx(t *testing.T) {
 
 func TestInitFirebase(t *testing.T) {
 	// FireStore
-	projectID := ""
-	conf := &firebase.Config{ProjectID: projectID}
 	ctx := context.Background()
-	app, err := firebase.NewApp(ctx, conf)
+
+	opt := option.WithCredentialsFile("./firebase-admin-sdk.json")
+	app, err := firebase.NewApp(context.Background(), nil, opt)
 	if err != nil {
-		t.Fatalf("Firebase app init failed: %v", err)
+		t.Fatalf("error initializing app: %v", err)
 	}
 
 	client, err := app.Firestore(ctx)
@@ -183,4 +186,33 @@ func TestInitFirebase(t *testing.T) {
 		t.Fatalf("Firestore client init failed: %v", err)
 	}
 	defer client.Close()
+	_, _, err = client.Collection("users").Add(ctx, map[string]interface{}{
+		"first": "Ada",
+		"last":  "Lovelace",
+		"born":  1815,
+	})
+	if err != nil {
+		t.Fatalf("Failed adding alovelace: %v", err)
+	}
+	_, _, err = client.Collection("users").Add(ctx, map[string]interface{}{
+		"first":  "Alan",
+		"middle": "Mathison",
+		"last":   "Turing",
+		"born":   1912,
+	})
+	if err != nil {
+		t.Fatalf("Failed adding aturing: %v", err)
+	}
+	iter := client.Collection("users").Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			t.Fatalf("Failed to iterate: %v", err)
+		}
+		fmt.Println(doc.Data())
+	}
+
 }
