@@ -1,12 +1,9 @@
 package indeks
 
 import (
-	"context"
 	"reflect"
 	"testing"
 	"time"
-
-	firebase "firebase.google.com/go"
 )
 
 var (
@@ -166,21 +163,4 @@ func TestSummaryPointIdx(t *testing.T) {
 	if reflect.DeepEqual(expected, actual) {
 		t.Fatalf("Sum result not match\nhave %v\nwant %v", actual, expected)
 	}
-}
-
-func TestInitFirebase(t *testing.T) {
-	// FireStore
-	projectID := ""
-	conf := &firebase.Config{ProjectID: projectID}
-	ctx := context.Background()
-	app, err := firebase.NewApp(ctx, conf)
-	if err != nil {
-		t.Fatalf("Firebase app init failed: %v", err)
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		t.Fatalf("Firestore client init failed: %v", err)
-	}
-	defer client.Close()
 }
