@@ -11,6 +11,8 @@ const (
 	ResultChanged
 )
 
+var Idxs []*Idx
+
 type Idx struct {
 	Name            string
 	Desc            string

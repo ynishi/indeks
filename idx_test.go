@@ -1,15 +1,9 @@
 package indeks
 
 import (
-	"context"
 	"reflect"
 	"testing"
 	"time"
-
-	firebase "firebase.google.com/go"
-	"google.golang.org/api/option"
-	"google.golang.org/api/iterator"
-	"fmt"
 )
 
 var (
@@ -169,50 +163,4 @@ func TestSummaryPointIdx(t *testing.T) {
 	if reflect.DeepEqual(expected, actual) {
 		t.Fatalf("Sum result not match\nhave %v\nwant %v", actual, expected)
 	}
-}
-
-func TestInitFirebase(t *testing.T) {
-	// FireStore
-	ctx := context.Background()
-
-	opt := option.WithCredentialsFile("./firebase-admin-sdk.json")
-	app, err := firebase.NewApp(context.Background(), nil, opt)
-	if err != nil {
-		t.Fatalf("error initializing app: %v", err)
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		t.Fatalf("Firestore client init failed: %v", err)
-	}
-	defer client.Close()
-	_, _, err = client.Collection("users").Add(ctx, map[string]interface{}{
-		"first": "Ada",
-		"last":  "Lovelace",
-		"born":  1815,
-	})
-	if err != nil {
-		t.Fatalf("Failed adding alovelace: %v", err)
-	}
-	_, _, err = client.Collection("users").Add(ctx, map[string]interface{}{
-		"first":  "Alan",
-		"middle": "Mathison",
-		"last":   "Turing",
-		"born":   1912,
-	})
-	if err != nil {
-		t.Fatalf("Failed adding aturing: %v", err)
-	}
-	iter := client.Collection("users").Documents(ctx)
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			t.Fatalf("Failed to iterate: %v", err)
-		}
-		fmt.Println(doc.Data())
-	}
-
 }
