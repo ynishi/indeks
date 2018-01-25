@@ -78,7 +78,7 @@ func TestHealthCheckHttpServer(t *testing.T) {
 	}
 }
 
-func TestIdxAPI(t *testing.T) {
+func TestAddIdxAPI(t *testing.T) {
 
 	ts := httptest.NewServer(AddIdxHandler())
 	defer ts.Close()
@@ -97,3 +97,81 @@ func TestIdxAPI(t *testing.T) {
 		t.Fatalf("Data is not OK: %v", string(data))
 	}
 }
+
+func TestUpdateIdxAPI(t *testing.T) {
+
+	ts := httptest.NewServer(UpdateIdxHandler())
+	defer ts.Close()
+
+	r, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatalf("Error by http.Get(). %v", err)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		t.Fatalf("Error by ioutil.ReadAll(). %v", err)
+	}
+
+	if "OK" != string(data) {
+		t.Fatalf("Data is not OK: %v", string(data))
+	}
+}
+
+func TestRemoveIdxAPI(t *testing.T) {
+	ts := httptest.NewServer(RemoveIdxHandler())
+	defer ts.Close()
+
+	r, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatalf("Error by http.Get(). %v", err)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		t.Fatalf("Error by ioutil.ReadAll(). %v", err)
+	}
+
+	if "OK" != string(data) {
+		t.Fatalf("Data is not OK: %v", string(data))
+	}
+}
+
+func TestListIdxAPI(t *testing.T) {
+	ts := httptest.NewServer(ListIdxHandler())
+	defer ts.Close()
+
+	r, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatalf("Error by http.Get(). %v", err)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		t.Fatalf("Error by ioutil.ReadAll(). %v", err)
+	}
+
+	if "OK" != string(data) {
+		t.Fatalf("Data is not OK: %v", string(data))
+	}
+}
+
+func TestDetailIdxAPI(t *testing.T) {
+	ts := httptest.NewServer(DetailIdxHandler())
+	defer ts.Close()
+
+	r, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatalf("Error by http.Get(). %v", err)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		t.Fatalf("Error by ioutil.ReadAll(). %v", err)
+	}
+
+	if "OK" != string(data) {
+		t.Fatalf("Data is not OK: %v", string(data))
+	}
+}
+
